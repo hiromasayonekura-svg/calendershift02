@@ -6,6 +6,17 @@ import {
   ClipboardCopy, ShieldCheck, UserCheck, Wand2, Clock
 } from 'lucide-react';
 
+// ── 対策: 安全なアイコン呼び出しコンポーネント ─────────────
+// アイコンが存在しない場合でもアプリがクラッシュ（真っ暗）するのを防ぎます
+const SafeIcon = ({ icon: Icon, size = 16, color = "currentColor", ...props }) => {
+  if (!Icon) {
+    // アイコンが存在しない場合は、赤い枠線の四角を表示してクラッシュを回避
+    return <span style={{ width: size, height: size, display: 'inline-block', backgroundColor: '#fee2e2', border: '1px dashed #ef4444', borderRadius: '4px' }} title="Icon Missing" />;
+  }
+  return <Icon size={size} color={color} {...props} />;
+};
+// ────────────────────────────────────────────────────────
+
 const START_TIME_SLOTS = Array.from({ length: 14 }, (_, i) => `${i + 9}:00`);
 const END_TIME_SLOTS = Array.from({ length: 14 }, (_, i) => `${i + 10}:00`);
 const TIME_SLOTS = START_TIME_SLOTS;
@@ -59,26 +70,19 @@ const C = {
 };
 
 const S = {
-  // Layout
   app: {
     minHeight: '100vh', background: C.bg,
     padding: '16px', fontFamily: "'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif",
     color: C.slate800,
   },
   maxW: { maxWidth: 1280, margin: '0 auto' },
-
-  // Cards
   card: {
     background: C.white, borderRadius: 16,
     border: `1px solid ${C.slate200}`,
     boxShadow: '0 1px 4px rgba(0,0,0,.06)',
   },
   cardPad: { padding: 20 },
-
-  // Sidebar
   sidebar: { width: 260, minWidth: 220, flexShrink: 0 },
-
-  // Buttons
   btnPrimary: (color = C.slate800) => ({
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     padding: '10px 18px', borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -104,8 +108,6 @@ const S = {
     boxShadow: active ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
     transition: 'all .2s',
   }),
-
-  // Inputs
   input: {
     padding: '9px 12px', borderRadius: 10, fontSize: 13,
     border: `1.5px solid ${C.slate200}`, outline: 'none',
@@ -122,8 +124,6 @@ const S = {
     background: C.white, color: C.slate800, resize: 'none', width: '100%',
     boxSizing: 'border-box',
   },
-
-  // Calendar cell status pills
   reqPill: (type) => {
     const map = {
       attendance: { bg: '#fef9c3', border: '#facc15', color: '#854d0e', borderStyle: 'dashed' },
@@ -163,7 +163,7 @@ const AuthScreen = ({ onAuth }) => {
     <div style={{ minHeight: '100vh', background: C.slate900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ ...S.card, maxWidth: 420, width: '100%', padding: 40, textAlign: 'center' }}>
         <div style={{ width: 60, height: 60, borderRadius: 16, background: C.blue100, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: C.blue600 }}>
-          <ShieldCheck size={28} />
+          <SafeIcon icon={ShieldCheck} size={28} />
         </div>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.slate900, marginBottom: 8 }}>Password Required</h1>
         <p style={{ fontSize: 13, color: C.slate500, marginBottom: 28 }}>社内専用ツールです。パスワードを入力してください。</p>
@@ -277,7 +277,7 @@ const App = () => {
     const el = document.createElement('textarea');
     el.value = btoa(encodeURIComponent(JSON.stringify({ staff, shifts })));
     document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-    showToast('希望コードをコピーしました！管理者にLINE等で送ってください。');
+    showToast('希望コードをコピーしました！管理者に送ってください。');
   };
 
   const handleImportCode = () => {
@@ -343,10 +343,10 @@ const App = () => {
         {/* Mode tabs */}
         <div style={{ display: 'flex', background: C.slate100, padding: 6, borderRadius: 16, maxWidth: 440, margin: '0 auto 28px', gap: 4 }}>
           <button style={S.btnTab(appMode === 'staff', C.blue600)} onClick={() => setAppMode('staff')}>
-            <UserCheck size={16} /> メンバー用（希望入力）
+            <SafeIcon icon={UserCheck} size={16} /> メンバー用（希望入力）
           </button>
           <button style={S.btnTab(appMode === 'admin', C.emerald600)} onClick={() => setAppMode('admin')}>
-            <ShieldCheck size={16} /> 管理者用（シフト確定）
+            <SafeIcon icon={ShieldCheck} size={16} /> 管理者用（シフト確定）
           </button>
         </div>
 
@@ -354,16 +354,16 @@ const App = () => {
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: C.slate900, display: 'flex', alignItems: 'center', gap: 10, margin: 0 }}>
-              <CalendarIcon size={26} color={accentColor} /> シフト調整ツール
+              <SafeIcon icon={CalendarIcon} size={26} color={accentColor} /> シフト調整ツール
             </h1>
             <p style={{ fontSize: 13, color: C.slate500, marginTop: 4 }}>
               {appMode === 'staff' ? '出勤可能な希望時間帯を入力してください。' : 'カレンダーでメンバーの希望を確認し、シフトを確定します。'}
             </p>
           </div>
           <div style={{ ...S.card, display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px' }}>
-            <button style={S.btnGhost} onClick={() => changeMonth(-1)}><ChevronLeft size={20} /></button>
+            <button style={S.btnGhost} onClick={() => changeMonth(-1)}><SafeIcon icon={ChevronLeft} size={20} /></button>
             <span style={{ fontWeight: 700, minWidth: 110, textAlign: 'center', fontSize: 15 }}>{year}年 {month + 1}月</span>
-            <button style={S.btnGhost} onClick={() => changeMonth(1)}><ChevronRight size={20} /></button>
+            <button style={S.btnGhost} onClick={() => changeMonth(1)}><SafeIcon icon={ChevronRight} size={20} /></button>
           </div>
         </div>
 
@@ -372,11 +372,9 @@ const App = () => {
 
           {/* Sidebar */}
           <aside style={{ width: 240, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* Staff panel */}
             <div style={{ ...S.card, ...S.cardPad }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: C.slate700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <Users size={16} color={C.slate400} /> {appMode === 'staff' ? 'メンバー追加' : 'スタッフ管理'}
+                <SafeIcon icon={Users} size={16} color={C.slate400} /> {appMode === 'staff' ? 'メンバー追加' : 'スタッフ管理'}
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <input
@@ -386,37 +384,36 @@ const App = () => {
                   onKeyPress={e => e.key === 'Enter' && addStaff()}
                 />
                 <button style={{ ...S.btnSmall, borderRadius: 10 }} onClick={addStaff} disabled={!newStaffName.trim()}>
-                  <Plus size={18} />
+                  <SafeIcon icon={Plus} size={18} />
                 </button>
               </div>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, maxHeight: 180, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {staff.map(s => (
                   <li key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 10, background: C.slate50, border: `1px solid ${C.slate100}` }}>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{s.name}</span>
-                    <button style={{ ...S.btnGhost, padding: 4 }} onClick={() => removeStaff(s.id)}><Trash2 size={14} /></button>
+                    <button style={{ ...S.btnGhost, padding: 4 }} onClick={() => removeStaff(s.id)}><SafeIcon icon={Trash2} size={14} /></button>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Mode actions */}
             {appMode === 'staff' ? (
               <div style={{ ...S.card, padding: 20, background: C.blue50, border: `1px solid ${C.blue100}` }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: C.blue900, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <Share2 size={16} /> 希望を提出する
+                  <SafeIcon icon={Share2} size={16} /> 希望を提出する
                 </div>
                 <p style={{ fontSize: 12, color: C.blue700, marginBottom: 14, lineHeight: 1.6 }}>
                   すべての希望を入力し終えたら、コードをコピーして管理者に送付してください。
                 </p>
                 <button style={{ ...S.btnPrimary(C.blue600), width: '100%' }} onClick={generateShareCode}>
-                  <ClipboardCopy size={16} /> 希望コードをコピー
+                  <SafeIcon icon={ClipboardCopy} size={16} /> 希望コードをコピー
                 </button>
               </div>
             ) : (
               <>
                 <div style={{ ...S.card, padding: 20, background: C.emerald50, border: `1px solid ${C.emerald100}` }}>
                   <div style={{ fontWeight: 700, fontSize: 14, color: C.emerald900, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <DownloadCloud size={16} /> 希望を読み込む
+                    <SafeIcon icon={DownloadCloud} size={16} /> 希望を読み込む
                   </div>
                   <p style={{ fontSize: 12, color: C.emerald700, marginBottom: 10, lineHeight: 1.6 }}>
                     メンバーから送られた「希望コード」を貼り付けて読み込みます。
@@ -428,7 +425,7 @@ const App = () => {
                 </div>
                 <div style={{ ...S.card, ...S.cardPad }}>
                   <div style={{ fontWeight: 700, fontSize: 14, color: C.slate700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <Download size={16} color={C.slate400} /> シフト出力
+                    <SafeIcon icon={Download} size={16} color={C.slate400} /> シフト出力
                   </div>
                   <button style={{ ...S.btnPrimary(), width: '100%' }} onClick={exportToSpreadsheet}>
                     確定シフトをTSV出力
@@ -437,7 +434,6 @@ const App = () => {
               </>
             )}
 
-            {/* Legend */}
             <div style={{ ...S.card, ...S.cardPad }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: C.slate400, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>凡例</div>
               {[
@@ -459,15 +455,11 @@ const App = () => {
           {/* Calendar */}
           <main style={{ flex: 1, minWidth: 0, overflowX: 'auto' }}>
             <div style={{ ...S.card, minWidth: 580, overflow: 'hidden' }}>
-              {/* Day headers */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: C.slate50, borderBottom: `1px solid ${C.slate200}` }}>
                 {DAYS_OF_WEEK.map((d, i) => (
-                  <div key={d} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: 1, color: i === 0 ? '#ef4444' : i === 6 ? C.blue500 : C.slate400 }}>
-                    {d}
-                  </div>
+                  <div key={d} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: 1, color: i === 0 ? '#ef4444' : i === 6 ? C.blue500 : C.slate400 }}>{d}</div>
                 ))}
               </div>
-              {/* Cells */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderLeft: `1px solid ${C.slate100}`, borderTop: `1px solid ${C.slate100}` }}>
                 {calendarDays.map((day, idx) => {
                   const dateStr = day ? formatDate(year, month, day) : null;
@@ -492,8 +484,7 @@ const App = () => {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                             <span style={{
                               width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 13, fontWeight: 600,
-                              background: isToday ? accentColor : 'transparent',
+                              fontSize: 13, fontWeight: 600, background: isToday ? accentColor : 'transparent',
                               color: isToday ? C.white : dow === 0 ? '#ef4444' : dow === 6 ? C.blue500 : C.slate700,
                             }}>{day}</span>
                           </div>
@@ -531,7 +522,7 @@ const App = () => {
                           </div>
                           {dayData.notes && (
                             <div style={{ marginTop: 4, fontSize: 10, color: C.slate400, display: 'flex', alignItems: 'center', gap: 3, background: C.slate50, borderRadius: 4, padding: '2px 5px', border: `1px solid ${C.slate100}`, overflow: 'hidden' }}>
-                              <FileText size={9} style={{ flexShrink: 0 }} />
+                              <SafeIcon icon={FileText} size={9} style={{ flexShrink: 0 }} />
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dayData.notes}</span>
                             </div>
                           )}
@@ -550,8 +541,6 @@ const App = () => {
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.5)', backdropFilter: 'blur(4px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: C.white, borderRadius: 20, boxShadow: '0 25px 60px rgba(0,0,0,.2)', width: '100%', maxWidth: 860, maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-            {/* Modal header */}
             <div style={{ padding: '18px 22px', borderBottom: `1px solid ${accentBorder}`, background: accentLight, borderRadius: '20px 20px 0 0', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -561,7 +550,7 @@ const App = () => {
                   </span>
                 </div>
                 <button onClick={() => setIsModalOpen(false)} style={{ padding: 8, borderRadius: 10, border: `1px solid ${C.slate200}`, background: C.white, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  <X size={18} color={C.slate500} />
+                  <SafeIcon icon={X} size={18} color={C.slate500} />
                 </button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -575,12 +564,11 @@ const App = () => {
               </div>
             </div>
 
-            {/* Staff Mode */}
             {appMode === 'staff' && (
               <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <section>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.slate700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid ${C.slate200}` }}>
-                    <Clock size={15} /> 出勤時間の希望
+                    <SafeIcon icon={Clock} size={15} /> 出勤時間の希望
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {staff.map(s => {
@@ -623,7 +611,7 @@ const App = () => {
                 </section>
                 <section>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.slate700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid ${C.slate200}` }}>
-                    <FileText size={15} /> タスク・個人の備考
+                    <SafeIcon icon={FileText} size={15} /> タスク・個人の備考
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
                     {staff.map(s => (
@@ -637,13 +625,12 @@ const App = () => {
               </div>
             )}
 
-            {/* Admin Mode */}
             {appMode === 'admin' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div style={{ padding: '10px 22px', background: C.emerald50, borderBottom: `1px solid ${C.emerald100}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexShrink: 0 }}>
                   <p style={{ fontSize: 12, color: C.emerald700, fontWeight: 500, margin: 0 }}>点線はメンバーの希望です。クリックで「確定」に切り替わります。</p>
                   <button style={{ ...S.btnPrimary(C.emerald600), whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => applyRequestsToConfirmed(selectedDate)}>
-                    <Wand2 size={15} /> 希望から一括シフト作成
+                    <SafeIcon icon={Wand2} size={15} /> 希望から一括シフト作成
                   </button>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '16px 22px' }}>
@@ -704,7 +691,6 @@ const App = () => {
               </div>
             )}
 
-            {/* Modal footer */}
             <div style={{ padding: '14px 22px', borderTop: `1px solid ${C.slate100}`, background: C.slate50, borderRadius: '0 0 20px 20px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
               <p style={{ flex: 1, fontSize: 11, color: C.slate400, margin: 0 }}>
                 {appMode === 'staff' ? '時間を選択するとその時間帯の希望が一括でセットされます。' : '細かく時間を調整したい場合は各セルをクリックして個別に変更できます。'}
@@ -718,9 +704,9 @@ const App = () => {
       {/* Toast */}
       {toastMessage && (
         <div style={{ position: 'fixed', bottom: 24, right: 24, background: C.slate800, color: C.white, padding: '12px 18px', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.3)', display: 'flex', alignItems: 'center', gap: 10, zIndex: 100 }}>
-          <CheckCircle2 size={18} color={C.emerald400} />
+          <SafeIcon icon={CheckCircle2} size={18} color={C.emerald400} />
           <span style={{ fontSize: 13, fontWeight: 500 }}>{toastMessage}</span>
-          <button style={{ ...S.btnGhost, marginLeft: 4, padding: 2 }} onClick={() => setToastMessage('')}><X size={15} /></button>
+          <button style={{ ...S.btnGhost, marginLeft: 4, padding: 2 }} onClick={() => setToastMessage('')}><SafeIcon icon={X} size={15} /></button>
         </div>
       )}
     </div>
